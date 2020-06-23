@@ -9,14 +9,14 @@ using tioLogReplay;
 
 namespace MarketHub.Libraries
 {
-    public class TioDbSet : List<Container>
+    public class TioDbSet : List<Item>
     {
         public TioConnection Tio { get; set; }
 
         public string Container { get; set; }
         public int Handle { get; set; }
 
-        public new Container this[int index]
+        public new Item this[int index]
         {
             get
             {
@@ -25,12 +25,14 @@ namespace MarketHub.Libraries
 
                 // format is "data key {key} value {value} metadata {metadata}" 
                 var results = answer.Split(' ');
-                var value = results[2];
-                var metadata = results[4];
+                var key = results[2];
+                var value = results[4];
+                var metadata = results[6];
 
-                return new Container()
+                return new Item()
                 {
-                    Name = this.Container,
+                    Container = this.Container,
+                    Key = key,
                     Value = value,
                     Metadata = metadata
                 };
@@ -64,21 +66,22 @@ namespace MarketHub.Libraries
                 throw new KeyNotFoundException();
 
             var handle = int.Parse(answer);
-
             return handle;
         }
 
-        public Container GetLast()
+        public Item GetLast()
         {
             return this[Count - 1];
         }
 
-        public IEnumerable<Container> GetLast(int count)
+        public IEnumerable<Item> GetLastByCount(int count)
         {
-            var length = Count;
-            for (var i = 1; i <= count; i++)
+            if (this.Count - count < this.Count)
+                throw new ArgumentOutOfRangeException();
+
+            for (var i = count; i > 0; i--)
             {
-                yield return this[length - 1];
+                yield return this[this.Count - i - 1];
             } 
         }
     }

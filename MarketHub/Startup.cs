@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 
 namespace MarketHub
 {
@@ -26,7 +27,29 @@ namespace MarketHub
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+
+            services
+             .AddAuthentication(options =>
+              {
+                  options.DefaultAuthenticateScheme = "JwtBearer";
+                  options.DefaultChallengeScheme = "JwtBearer";
+              })
+
+                           .AddJwtBearer("JwtBearer", options =>
+                            {
+                                options.TokenValidationParameters = new TokenValidationParameters
+                                {
+                                    ValidateIssuer = true,
+
+                                    ValidateAudience = true,
+
+                                    ValidateLifetime = true,
+
+                                    IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes("markethub-auth-key")),
+                                };
+                            });
         }
+
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -41,6 +64,8 @@ namespace MarketHub
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.UseAuthentication();
 
             app.UseEndpoints(endpoints =>
             {
